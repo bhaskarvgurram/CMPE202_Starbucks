@@ -95,6 +95,52 @@ let service = {
                 reject(e);
             }
         });
+    },
+    getMyOrders: (...args) => {
+        return new Promise((resolve, reject) => {
+            try {
+                let _session = args[0] || null;
+                let body = args[1] || {};
+                let params = args[2] || null;
+                let _transactions = null;
+                if (!params.userId) {
+                    reject([rs.invalidrequest]);
+                    return;
+                }
+                transactionModel.find({
+                    userId: params.userId
+                })
+                    .then(dbObj => {
+                        if (!!dbObj) {
+                            _transactions = dbObj;
+                            orderIds = _transactions.map(transaction => transaction.orderId)
+                            return orderModel.find({
+                                orderId: { $in: orderIds }
+                            })
+                        } else {
+                            Promise.reject(rs.notfound);
+                            return;
+                        }
+                    })
+                    .then(dbObj => {
+                        console.log(dbObj)
+                        console.log(_transactions)
+                        _transactions = _transactions.map(transaction => {
+                            return {
+                                items: dbObj.find(order => order.orderId === transaction.orderId).items,
+                                ...transaction._doc
+                            }
+                        })
+                        console.log(_transactions)
+                        resolve(_transactions)
+                    })
+                    .catch(err => {
+                        reject(err)
+                    })
+            } catch (e) {
+                reject(e)
+            }
+        })
     }
 }
 let router = {
@@ -109,6 +155,19 @@ let router = {
             })
         };
         service.checkoutOrder(req.user, req.params.orderId, req.body).then(successCB, next);
+    },
+    getMyOrders: (req, res, next) => {
+        let successCB = (data) => {
+            res.json({
+                result: "success",
+                response: [{
+                    message: "Transactions read successfully",
+                    code: "READ"
+                }],
+                data
+            })
+        };
+        service.getMyOrders(req.user, req.body, req.params).then(successCB, next);
     }
 };
 module.exports.service = service;
