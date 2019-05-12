@@ -16,7 +16,7 @@ No blocking items, so far.
 
 ----------------------------------------------------------------------------------------------------------------
 
-Week 2: (11/11 to 11/17)
+Week 2: (05/05 to 05/11)
 What tasks did I work on / complete?
 - Created a node hello world app in docker and deployed it to AWS ECS.
 - Implemented api to fetch my transactions in expressjs
